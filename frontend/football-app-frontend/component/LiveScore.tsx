@@ -71,6 +71,9 @@ const leagueOrder = [
 const isLiveStatus = (status: string) =>
   ['IN_PLAY', 'PAUSED', 'LIVE'].includes(status);
 
+const isFinishedStatus = (status: string) =>
+  ['FINISHED', 'FT', 'AET', 'PEN'].includes(status);
+
 const getCenterText = (match: Match) => {
   if (isLiveStatus(match.status)) {
     return match.minute ? `${match.minute}'` : 'LIVE';
@@ -88,10 +91,10 @@ const getCenterText = (match: Match) => {
 };
 
 const TeamPill = ({ team, align = 'left' }: { team: Team; align?: 'left' | 'right' }) => (
-  <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
+  <div className={`flex items-center gap-2 min-w-0 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
     {align === 'right' ? (
       <>
-        <span className="font-semibold text-sm sm:text-base text-right line-clamp-1">{team.name}</span>
+        <span className="font-semibold text-sm sm:text-base text-right truncate">{team.name}</span>
         <Image
           src={team.crest || '/placeholder.svg'}
           alt={team.name}
@@ -109,7 +112,7 @@ const TeamPill = ({ team, align = 'left' }: { team: Team; align?: 'left' | 'righ
           height={24}
           className="rounded-full object-contain"
         />
-        <span className="font-semibold text-sm sm:text-base line-clamp-1">{team.name}</span>
+        <span className="font-semibold text-sm sm:text-base truncate">{team.name}</span>
       </>
     )}
   </div>
@@ -162,13 +165,13 @@ export default function LiveScore() {
 
   const MatchRow = ({ match }: { match: Match }) => (
     <Link href={`/matches/${match.id}`} className="block">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-3 border-b last:border-b-0 hover:bg-slate-50 rounded-md px-2 transition-colors">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-2.5 border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80 rounded-lg px-2.5 transition-colors">
         <TeamPill team={match.homeTeam} />
-        <div className="text-center min-w-[96px]">
-          <div className="font-extrabold text-lg leading-none">
+        <div className="text-center min-w-[102px]">
+          <div className="font-extrabold text-lg leading-none bg-slate-100 rounded-md px-2 py-1 inline-block min-w-[82px]">
             {(match.score?.fullTime?.home ?? '-')}&nbsp;:&nbsp;{(match.score?.fullTime?.away ?? '-')}
           </div>
-          <div className="text-xs text-slate-500 mt-1 flex items-center justify-center gap-1">
+          <div className="text-[11px] text-slate-500 mt-1 flex items-center justify-center gap-1">
             {isLiveStatus(match.status) && <Radio className="h-3 w-3 text-red-500" />}
             <span>{getCenterText(match)}</span>
           </div>
@@ -180,7 +183,21 @@ export default function LiveScore() {
 
   const LeagueCard = ({ league, matches }: { league: string; matches: Match[] }) => {
     const isExpanded = expandedLeagues[league];
-    const visibleMatches = isExpanded ? matches : matches.slice(0, 3);
+    const sortedMatches = [...matches].sort(
+      (a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime()
+    );
+    const activeOrUpcoming = sortedMatches.filter((m) => !isFinishedStatus(m.status));
+    const recentFinished = sortedMatches
+      .filter((m) => isFinishedStatus(m.status))
+      .sort((a, b) => new Date(b.utcDate).getTime() - new Date(a.utcDate).getTime());
+
+    const visiblePrimaryMatches = isExpanded
+      ? activeOrUpcoming
+      : activeOrUpcoming.slice(0, 3);
+    const visibleRecentResults = isExpanded
+      ? recentFinished.slice(0, 8)
+      : recentFinished.slice(0, 2);
+    const totalHidden = Math.max(activeOrUpcoming.length - visiblePrimaryMatches.length, 0);
 
     return (
       <motion.div
@@ -190,9 +207,9 @@ export default function LiveScore() {
         transition={{ duration: 0.25 }}
         className="mb-4"
       >
-        <Card className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 border-slate-200">
+        <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border-slate-200/80">
           <CardHeader
-            className={`${leagueColors[league] || leagueColors.Other} text-white cursor-pointer`}
+            className={`${leagueColors[league] || leagueColors.Other} text-white cursor-pointer py-4`}
             onClick={() => toggleLeagueExpansion(league)}
           >
             <CardTitle className="text-lg sm:text-xl flex items-center justify-between">
@@ -201,12 +218,22 @@ export default function LiveScore() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4">
-            {visibleMatches.map((match) => (
+            {visiblePrimaryMatches.map((match) => (
               <MatchRow key={match.id} match={match} />
             ))}
-            {!isExpanded && matches.length > 3 && (
-              <div className="text-center mt-2 text-sm text-slate-500">
-                {matches.length - 3} more matches
+            {visibleRecentResults.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-dashed border-slate-200">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-2">
+                  Recent Results
+                </p>
+                {visibleRecentResults.map((match) => (
+                  <MatchRow key={`recent-${match.id}`} match={match} />
+                ))}
+              </div>
+            )}
+            {!isExpanded && totalHidden > 0 && (
+              <div className="text-center mt-3 text-sm text-slate-500">
+                {totalHidden} more matches
               </div>
             )}
           </CardContent>
@@ -218,7 +245,10 @@ export default function LiveScore() {
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-3xl font-bold text-slate-900">Live Scores</h2>
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900">Live Scores</h2>
+          <p className="text-xs text-slate-500 mt-1">Live, upcoming, and latest finished matches</p>
+        </div>
         <motion.button
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}

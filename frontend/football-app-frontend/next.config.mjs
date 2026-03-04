@@ -6,6 +6,7 @@ const nextConfig = {
       "via.placeholder.com",
       "images.unsplash.com",
       "www.thesportsdb.com",
+      "resources.premierleague.com",
     ],
   },
 };

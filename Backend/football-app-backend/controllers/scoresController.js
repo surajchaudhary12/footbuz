@@ -30,15 +30,20 @@ const mapFootballDataMatchSummary = (match) => ({
 });
 
 const fetchScoresFromFootballData = async () => {
+  const dateFrom = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+  const dateTo = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
   const response = await axios.get("https://api.football-data.org/v4/matches", {
     headers: {
       "X-Auth-Token": process.env.API_FOOTBALL_KEY,
     },
     params: {
-      dateFrom: new Date().toISOString().split("T")[0],
-      dateTo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
+      dateFrom,
+      dateTo,
     },
   });
 

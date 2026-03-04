@@ -15,6 +15,7 @@ export const API_CONFIG = {
   ARTICLES: `${BASE_URL}/api/articles`,
   NEWS: `${BASE_URL}/api/news`,
   SCORES: `${BASE_URL}/api/scores`,
+  FANTASY: `${BASE_URL}/api/fantasy`,
   LEAGUES: `${BASE_URL}/api/leagues`,
   LEAGUE: (leagueId: string) => `${BASE_URL}/api/league/${leagueId}`,
   PLAYERS: `${BASE_URL}/api/players`,
