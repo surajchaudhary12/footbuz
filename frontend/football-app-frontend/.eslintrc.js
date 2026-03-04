@@ -1,0 +1,10 @@
+module.exports = {
+  extends: [
+    "next/core-web-vitals", // or another baseline config you're using
+  ],
+  rules: {
+    "@typescript-eslint/no-explicit-any": "off",
+    "@next/next/no-img-element": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+  },
+};
