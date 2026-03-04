@@ -6,6 +6,10 @@ export interface BaseArticle {
   headingImage: string;
   content: string;
   author: string;
+  // Optional fields present on some article variants
+  player?: string;
+  desc?: string;
+  website?: string;
 }
 
 export interface UserArticle extends BaseArticle {
