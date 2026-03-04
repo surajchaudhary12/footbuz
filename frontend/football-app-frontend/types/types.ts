@@ -39,6 +39,8 @@ export interface GeneralArticle extends BaseArticle {
 export type NewsArticle = UserArticle | TransferArticle | PlayerArticle | GeneralArticle;
 
 export interface ModalArticle {
+  title?: string;
+  source?: string;
   player?: string;
   desc?: string;
   content?: string;

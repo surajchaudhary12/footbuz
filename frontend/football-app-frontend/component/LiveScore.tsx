@@ -1,17 +1,15 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
-
+import { RefreshCw, ChevronDown, ChevronUp, Radio } from 'lucide-react';
 import { API_CONFIG } from '@/utils/constants';
 
-const API_BASE_URL = API_CONFIG.BASE_URL;
-const SCORE_REFRESH_DELAY = 60000; // 1 minute for scores
-const TEAM_REFRESH_DELAY = 300000; // 5 minutes for team names
-const LEAGUE_REFRESH_DELAY = 3600000; // 1 hour for league names
+const SCORE_REFRESH_DELAY = 60000;
 
 interface Team {
   id: number;
@@ -38,6 +36,7 @@ interface Match {
   id: number;
   utcDate: string;
   status: string;
+  minute?: number | null;
   homeTeam: Team;
   awayTeam: Team;
   score: Score;
@@ -48,14 +47,14 @@ interface LiveScores {
 }
 
 const leagueColors: { [key: string]: string } = {
-  'UEFA Champions League': 'bg-gradient-to-r from-blue-600 to-blue-400',
-  'UEFA Europa League': 'bg-gradient-to-r from-orange-600 to-black',
-  'Premier League': 'bg-gradient-to-r from-purple-600 to-blue-600',
-  'La Liga': 'bg-gradient-to-r from-red-600 to-yellow-600',
-  'Serie A': 'bg-gradient-to-r from-blue-600 to-green-600',
-  'Bundesliga': 'bg-gradient-to-r from-red-600 to-gray-600',
-  'Ligue 1': 'bg-gradient-to-r from-blue-600 to-red-600',
-  'Other': 'bg-gradient-to-r from-gray-600 to-gray-400'
+  'UEFA Champions League': 'bg-gradient-to-r from-sky-700 to-indigo-700',
+  'UEFA Europa League': 'bg-gradient-to-r from-orange-600 to-zinc-800',
+  'Premier League': 'bg-gradient-to-r from-fuchsia-700 to-violet-700',
+  'La Liga': 'bg-gradient-to-r from-red-600 to-amber-500',
+  'Serie A': 'bg-gradient-to-r from-blue-700 to-emerald-600',
+  'Bundesliga': 'bg-gradient-to-r from-rose-700 to-zinc-700',
+  'Ligue 1': 'bg-gradient-to-r from-indigo-700 to-rose-600',
+  'Other': 'bg-gradient-to-r from-slate-600 to-slate-500'
 };
 
 const leagueOrder = [
@@ -69,118 +68,117 @@ const leagueOrder = [
   'Other'
 ];
 
+const isLiveStatus = (status: string) =>
+  ['IN_PLAY', 'PAUSED', 'LIVE'].includes(status);
+
+const getCenterText = (match: Match) => {
+  if (isLiveStatus(match.status)) {
+    return match.minute ? `${match.minute}'` : 'LIVE';
+  }
+  if (match.status === 'FINISHED') return 'FT';
+  if (match.status === 'TIMED') {
+    return new Date(match.utcDate).toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+  return match.status;
+};
+
+const TeamPill = ({ team, align = 'left' }: { team: Team; align?: 'left' | 'right' }) => (
+  <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
+    {align === 'right' ? (
+      <>
+        <span className="font-semibold text-sm sm:text-base text-right line-clamp-1">{team.name}</span>
+        <Image
+          src={team.crest || '/placeholder.svg'}
+          alt={team.name}
+          width={24}
+          height={24}
+          className="rounded-full object-contain"
+        />
+      </>
+    ) : (
+      <>
+        <Image
+          src={team.crest || '/placeholder.svg'}
+          alt={team.name}
+          width={24}
+          height={24}
+          className="rounded-full object-contain"
+        />
+        <span className="font-semibold text-sm sm:text-base line-clamp-1">{team.name}</span>
+      </>
+    )}
+  </div>
+);
+
 export default function LiveScore() {
   const [liveScores, setLiveScores] = useState<LiveScores>({});
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastTeamFetch, setLastTeamFetch] = useState(0);
-  const [lastLeagueFetch, setLastLeagueFetch] = useState(0);
   const [expandedLeagues, setExpandedLeagues] = useState<{ [key: string]: boolean }>({});
 
   const fetchLiveScores = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/scores`);
+      const response = await fetch(API_CONFIG.SCORES);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const source = response.headers.get('x-score-source');
+      if (source) {
+        console.log(`[LiveScore] data source: ${source}`);
+      }
       const data: LiveScores = await response.json();
       setLiveScores(data);
       setError(null);
-    } catch (error) {
-      console.error("Fetching error:", error);
-      setError(error instanceof Error ? error.message : String(error));
+    } catch (err) {
+      console.error("Fetching error:", err);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchTeamNames = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/team-names`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data: { [key: number]: Team } = await response.json();
-      setLiveScores(prevScores => {
-        const updatedScores = { ...prevScores };
-        Object.keys(updatedScores).forEach(league => {
-          updatedScores[league] = updatedScores[league].map(match => ({
-            ...match,
-            homeTeam: data[match.homeTeam.id] || match.homeTeam,
-            awayTeam: data[match.awayTeam.id] || match.awayTeam,
-          }));
-        });
-        return updatedScores;
-      });
-    } catch (error) {
-      console.error("Team fetching error:", error);
-    }
-  };
-
-  const fetchLeagueNames = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/league-names`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data: { [key: string]: string } = await response.json();
-      setLiveScores(prevScores => {
-        const updatedScores: LiveScores = {};
-        Object.keys(prevScores).forEach(oldLeague => {
-          const newLeague = data[oldLeague] || oldLeague;
-          updatedScores[newLeague] = prevScores[oldLeague];
-        });
-        return updatedScores;
-      });
-    } catch (error) {
-      console.error("League fetching error:", error);
-    }
-  };
-
   useEffect(() => {
     fetchLiveScores();
-    const intervalId = setInterval(() => {
-      const now = Date.now();
-      if (now - lastTeamFetch > TEAM_REFRESH_DELAY) {
-        fetchTeamNames();
-        setLastTeamFetch(now);
-      }
-      if (now - lastLeagueFetch > LEAGUE_REFRESH_DELAY) {
-        fetchLeagueNames();
-        setLastLeagueFetch(now);
-      }
-      fetchLiveScores();
-    }, SCORE_REFRESH_DELAY);
-
+    const intervalId = setInterval(fetchLiveScores, SCORE_REFRESH_DELAY);
     return () => clearInterval(intervalId);
-  }, [lastTeamFetch, lastLeagueFetch]);
+  }, []);
+
+  const orderedLeagues = useMemo(() => {
+    const keys = Object.keys(liveScores);
+    const known = leagueOrder.filter((league) => keys.includes(league));
+    const unknown = keys
+      .filter((league) => !known.includes(league))
+      .sort((a, b) => a.localeCompare(b));
+    return [...known, ...unknown];
+  }, [liveScores]);
 
   const toggleLeagueExpansion = (league: string) => {
-    setExpandedLeagues(prev => ({
-      ...prev,
-      [league]: !prev[league]
-    }));
+    setExpandedLeagues((prev) => ({ ...prev, [league]: !prev[league] }));
   };
 
   const MatchRow = ({ match }: { match: Match }) => (
-    <div className="flex justify-between items-center py-2 border-b last:border-b-0">
-      <div className="flex items-center space-x-2 w-5/12">
-        <img src={match.homeTeam.crest} alt={match.homeTeam.name} className="w-4 h-4" />
-        <span className="font-semibold text-sm">{match.homeTeam.name}</span>
-      </div>
-      <div className="flex flex-col items-center w-2/12">
-        <div className="text-sm font-bold items-center">
-          {match.score.fullTime.home ?? '-'} - {match.score.fullTime.away ?? '-'}
+    <Link href={`/matches/${match.id}`} className="block">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-3 border-b last:border-b-0 hover:bg-slate-50 rounded-md px-2 transition-colors">
+        <TeamPill team={match.homeTeam} />
+        <div className="text-center min-w-[96px]">
+          <div className="font-extrabold text-lg leading-none">
+            {(match.score?.fullTime?.home ?? '-')}&nbsp;:&nbsp;{(match.score?.fullTime?.away ?? '-')}
+          </div>
+          <div className="text-xs text-slate-500 mt-1 flex items-center justify-center gap-1">
+            {isLiveStatus(match.status) && <Radio className="h-3 w-3 text-red-500" />}
+            <span>{getCenterText(match)}</span>
+          </div>
         </div>
-        <div className="text-xs text-gray-500">
-          {match.status === 'FINISHED' 
-            ? 'FT' 
-            : `${new Date(match.utcDate).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' })} ${new Date(match.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-        </div>
+        <TeamPill team={match.awayTeam} align="right" />
       </div>
-      <div className="flex items-center justify-end space-x-2 w-5/12">
-        <span className="font-semibold text-sm">{match.awayTeam.name}</span>
-        <img src={match.awayTeam.crest} alt={match.awayTeam.name} className="w-4 h-4" />
-      </div>
-    </div>
+    </Link>
   );
 
-  const LeagueCard = ({ league, matches }: { league: string, matches: Match[] }) => {
+  const LeagueCard = ({ league, matches }: { league: string; matches: Match[] }) => {
     const isExpanded = expandedLeagues[league];
     const visibleMatches = isExpanded ? matches : matches.slice(0, 3);
 
@@ -189,26 +187,25 @@ export default function LiveScore() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.25 }}
         className="mb-4"
       >
-        <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader 
-            className={`${leagueColors[league] || 'bg-gradient-to-r from-gray-600 to-gray-400'} text-white cursor-pointer hover:bg-opacity-80 transition duration-200`}
+        <Card className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 border-slate-200">
+          <CardHeader
+            className={`${leagueColors[league] || leagueColors.Other} text-white cursor-pointer`}
             onClick={() => toggleLeagueExpansion(league)}
-            style={{ cursor: 'pointer' }}
           >
-            <CardTitle className="text-xl flex items-center justify-between">
+            <CardTitle className="text-lg sm:text-xl flex items-center justify-between">
               <span>{league}</span>
               {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             {visibleMatches.map((match) => (
               <MatchRow key={match.id} match={match} />
             ))}
             {!isExpanded && matches.length > 3 && (
-              <div className="text-center mt-2 text-sm text-gray-500">
+              <div className="text-center mt-2 text-sm text-slate-500">
                 {matches.length - 3} more matches
               </div>
             )}
@@ -219,18 +216,20 @@ export default function LiveScore() {
   };
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">Live Scores</h2>
+    <div className="space-y-4 max-w-5xl mx-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-3xl font-bold text-slate-900">Live Scores</h2>
         <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => window.location.reload()}
-          className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-300"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={fetchLiveScores}
+          className="p-2 rounded-full bg-slate-900 text-white hover:bg-slate-700 transition-colors duration-200"
+          aria-label="Refresh live scores"
         >
-          <RefreshCw size={20} />
+          <RefreshCw size={18} />
         </motion.button>
       </div>
+
       {isLoading ? (
         Array(3).fill(0).map((_, index) => (
           <Skeleton key={index} className="h-40 w-full mb-4" />
@@ -241,17 +240,17 @@ export default function LiveScore() {
         </Card>
       ) : (
         <AnimatePresence>
-          {leagueOrder.map(league => 
-            liveScores[league] && (
+          {orderedLeagues.map((league) =>
+            liveScores[league] ? (
               <LeagueCard key={league} league={league} matches={liveScores[league]} />
-            )
+            ) : null
           )}
           {Object.keys(liveScores).length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-center p-4 text-gray-600"
+              className="text-center p-4 text-slate-600"
             >
               No live matches at the moment.
             </motion.div>

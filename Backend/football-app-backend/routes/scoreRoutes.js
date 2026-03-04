@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const scoresController = require("../controllers/scoresController");
+const { getScores, getScoreByMatchId } = require("../controllers/scoresController");
 
-router.get("/", scoresController);
+router.get("/", getScores);
+router.get("/:id", getScoreByMatchId);
 
 module.exports = router;

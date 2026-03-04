@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import { Player } from '../types';
 import { searchPlayers } from '../utils/api';
 import { toast } from 'react-toastify';
@@ -21,6 +21,7 @@ const PlayerSearch: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(false);
+  const [failedImageIds, setFailedImageIds] = useState<Set<string>>(new Set());
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
@@ -31,6 +32,7 @@ const PlayerSearch: React.FC = () => {
 
     setLoading(true);
     setPlayers([]);
+    setFailedImageIds(new Set());
 
     try {
       const data = await searchPlayers(searchTerm);
@@ -77,15 +79,27 @@ const PlayerSearch: React.FC = () => {
                 <Card className="cursor-pointer hover:shadow-lg transition-shadow">
                   <CardContent className="flex flex-col items-center">
                     <Avatar className="h-24 w-24 mb-2 relative">
-                      {player.photo_url ? (
+                      {player.photo_url && !failedImageIds.has(player.player_id) ? (
                         <Image 
                           src={player.photo_url} 
                           alt={player.name} 
                           fill
                           className="rounded-full object-cover" 
+                          onError={() => {
+                            setFailedImageIds((prev) => {
+                              const next = new Set(prev);
+                              next.add(player.player_id);
+                              return next;
+                            });
+                          }}
                         />
                       ) : (
-                        <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                        <Image
+                          src="/placeholder.svg"
+                          alt={`${player.name} placeholder`}
+                          fill
+                          className="rounded-full object-cover"
+                        />
                       )}
                     </Avatar>
                     <h3 className="text-lg font-semibold">{player.name}</h3>

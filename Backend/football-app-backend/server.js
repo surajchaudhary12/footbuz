@@ -10,6 +10,8 @@ const leagueRoutes = require("./routes/leagueRoutes"); // New
 const leaguesRoutes = require("./routes/leaguesRoutes"); // New
 const articleRoutes = require("./routes/articleRoutes");
 const playerSearchRoutes = require("./routes/playerSearchRoutes");
+const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const cors = require("cors");
 const path = require("path");
 const app = express();
@@ -66,6 +68,8 @@ app.use(express.json());
 app.use("/assets", express.static(path.join(__dirname, "assets")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/players", playerSearchRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/scores", scoreRoutes);
 app.use("/api/articles", articleRoutes);

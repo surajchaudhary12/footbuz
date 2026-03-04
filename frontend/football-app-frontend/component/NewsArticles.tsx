@@ -20,31 +20,32 @@ export default function NewsArticles() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const [
-          userArticlesResponse,
-          newsResponse,
-          transfersResponse,
-          playerNewsResponse
-        ] = await Promise.all([
+        const results = await Promise.allSettled([
           fetch(`${API_CONFIG.ARTICLES}`),
           fetch(`${API_CONFIG.NEWS}/players/news`),
           fetch(`${API_CONFIG.NEWS}/players/transfers`),
-          fetch(`${API_CONFIG.PLAYERS}`)
+          fetch(`${API_CONFIG.NEWS}/players`)
         ]);
 
+        const extractJson = async (result: PromiseSettledResult<Response>) => {
+          if (result.status !== 'fulfilled' || !result.value.ok) {
+            return [];
+          }
+          const json = await result.value.json();
+          return Array.isArray(json) ? json : [];
+        };
+
+        const [userArticlesData, newsData, transfersData, playerNewsData] =
+          await Promise.all(results.map(extractJson));
+
         if (
-          !userArticlesResponse.ok ||
-          !newsResponse.ok ||
-          !transfersResponse.ok ||
-          !playerNewsResponse.ok
+          userArticlesData.length === 0 &&
+          newsData.length === 0 &&
+          transfersData.length === 0 &&
+          playerNewsData.length === 0
         ) {
           throw new Error('Failed to fetch news');
         }
-
-        const userArticlesData: NewsArticle[] = await userArticlesResponse.json();
-        const newsData: NewsArticle[] = await newsResponse.json();
-        const transfersData: NewsArticle[] = await transfersResponse.json();
-        const playerNewsData: NewsArticle[] = await playerNewsResponse.json();
 
         const combinedArticles: NewsArticle[] = [
           ...userArticlesData.map((article) => ({
@@ -54,21 +55,37 @@ export default function NewsArticles() {
             desc: article.desc      // Ensure 'desc' exists
           })),
           ...transfersData.map((article) => ({
-            ...article,
+            id: article.id || crypto.randomUUID(),
+            title: article.title || article.headLine || 'Transfer Update',
+            headingImage: article.headingImage || '',
+            content: article.content || article.source || '',
+            author: article.author || article.source || '',
             type: 'transfer' as const,
             player: article.player,
-            desc: article.desc
+            desc: article.desc || article.headLine,
+            website: article.website || article.url
           })),
-          // Uncomment and adjust if you have general news data
-          // ...newsData.map((article) => ({
-          //   ...article,
-          //   type: 'general' as const
-          // })),
+          ...newsData.map((article) => ({
+            id: article.id || crypto.randomUUID(),
+            title: article.title || article.headLine || 'Football News',
+            headingImage: article.headingImage || '',
+            content: article.content || article.source || '',
+            author: article.author || article.source || '',
+            type: 'general' as const,
+            player: article.player,
+            desc: article.desc || article.headLine,
+            website: article.website || article.url
+          })),
           ...playerNewsData.map((article) => ({
-            ...article,
+            id: article.id || crypto.randomUUID(),
+            title: article.title || article.player || 'Player Update',
+            headingImage: article.headingImage || '',
+            content: article.content || '',
+            author: article.author || '',
             type: 'player' as const,
             player: article.player,
-            desc: article.desc
+            desc: article.desc || article.title,
+            website: article.website
           }))
         ];
 
@@ -85,22 +102,15 @@ export default function NewsArticles() {
   }, []);
 
   const handleArticleClick = (article: NewsArticle) => {
-    if (
-      article.type === 'userArticle' ||
-      article.type === 'transfer' ||
-      article.type === 'player'
-    ) {
-      const modalArticle: ModalArticle = {
-        player: article.player,
-        desc: article.desc,
-        content: article.content,
-        website: article.website
-      };
-      setSelectedArticle(modalArticle);
-    } else {
-      console.warn('Selected article type is not eligible for the modal.');
-      // Optionally, handle 'general' articles differently or show a message
-    }
+    const modalArticle: ModalArticle = {
+      title: article.title,
+      source: article.author || article.content,
+      player: article.player,
+      desc: article.desc || article.content || article.title,
+      content: article.content,
+      website: article.website
+    };
+    setSelectedArticle(modalArticle);
   };
 
   if (isLoading) return <NewsSkeleton />;
@@ -153,11 +163,10 @@ const ArticleCard = ({
         <h3 className="text-md font-semibold mb-2">{article.title}</h3>
         <div className="relative h-40 mb-2">
           <Image
-            src={article.headingImage || '/placeholder.png'}
+            src={article.headingImage || '/placeholder.svg'}
             alt={article.title}
-            layout="fill"
-            objectFit="cover"
-            className="rounded-md"
+            fill
+            className="rounded-md object-cover"
           />
         </div>
         <p className="text-sm text-gray-600">

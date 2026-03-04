@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import LiveScore from './LiveScore'
 import LeagueSelector from './LeagueSelector'
 import NewsArticles from './NewsArticles'
@@ -44,11 +45,19 @@ export default function FootballDashboard() {
   const [activeTab, setActiveTab] = useState('liveScore')
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-6xl font-bold mb-6">FootballBuzz</h1>
+    <div className="container mx-auto p-4 rounded-3xl border border-slate-200 bg-white/90 shadow-sm">
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Matchday Hub</p>
+          <h1 className="text-4xl sm:text-5xl font-bold">FootballBuzz</h1>
+        </div>
+        <Link href="/auth">
+          <Button className="rounded-full px-6">Sign In</Button>
+        </Link>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList>
+        <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-slate-100 p-1 rounded-xl">
           <TabsTrigger value="liveScore">Live Score</TabsTrigger>
           <TabsTrigger value="leagues">Leagues</TabsTrigger>
           <TabsTrigger value="news">News</TabsTrigger>

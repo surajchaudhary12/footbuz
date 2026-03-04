@@ -14,23 +14,27 @@ interface NewsModalProps {
 export default function NewsModal({ article, onClose }: NewsModalProps) {
   if (!article) return null;
 
+  const title = article.title || article.player || 'Article';
+  const source = article.source || article.content || 'Unknown';
+  const description = article.desc || article.content || 'No description available';
+
   return (
     <Dialog open={!!article} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">{article.player || 'Article'}</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">{title}</DialogTitle>
           <DialogDescription>
-            Source: {article.content || 'Unknown'}
+            Source: {source}
           </DialogDescription>
         </DialogHeader>
         <div className="text-sm text-gray-700 whitespace-pre-wrap mt-4">
-          {article.desc || 'No description available'}
+          {description}
         </div>
         {article.website && (
           <div className="mt-4">
             <Button variant="outline" onClick={() => window.open(article.website, '_blank')}>
               <ExternalLink className="mr-2 h-4 w-4" />
-              Learn more about {article.player}
+              Open full article
             </Button>
           </div>
         )}

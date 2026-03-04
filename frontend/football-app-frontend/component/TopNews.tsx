@@ -11,7 +11,6 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import NewsModal from './NewsModal'
 import { ModalArticle } from '../types/types'
-import placeholderImage from '/public/placeholder.png' // Add a placeholder image in public folder
 
 interface Article {
   headLine: string
@@ -99,8 +98,10 @@ export default function TopNews() {
                   width={200}
                   height={200}
                   className="w-full h-40 object-cover"
-                  placeholder="blur"
-                  blurDataURL="/placeholder.png"
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement
+                    target.src = '/placeholder.svg'
+                  }}
                 />
                 <div className="absolute bottom-0 left-0 p-4 bg-gradient-to-t from-black via-transparent">
                   <h3 className="text-lg font-semibold text-white">{club}</h3>

@@ -8,7 +8,7 @@ const {
 } = require("../controllers/articleController");
 const router = express.Router();
 const fs = require("fs");
-const authenticateToken = require("../middlewares/authMiddleware");
+const { authenticateToken, requireRole } = require("../middlewares/authMiddleware");
 const multer = require("multer");
 const path = require("path");
 
@@ -45,6 +45,7 @@ router.get("/", getArticles); // GET /api/articles
 router.post(
   "/add",
   authenticateToken,
+  requireRole("admin"),
   upload.single("headingImage"),
   addArticle
 ); // POST /api/articles/add
