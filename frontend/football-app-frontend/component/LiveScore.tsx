@@ -6,7 +6,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5000';
+import { API_CONFIG } from '@/utils/constants';
+
+const API_BASE_URL = API_CONFIG.BASE_URL;
 const SCORE_REFRESH_DELAY = 60000; // 1 minute for scores
 const TEAM_REFRESH_DELAY = 300000; // 5 minutes for team names
 const LEAGUE_REFRESH_DELAY = 3600000; // 1 hour for league names

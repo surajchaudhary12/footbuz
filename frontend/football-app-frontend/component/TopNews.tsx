@@ -32,7 +32,8 @@ export default function TopNews() {
   useEffect(() => {
     const fetchTopNews = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/articles') // Adjust the endpoint if necessary
+        const { API_CONFIG } = await import('@/utils/constants')
+        const response = await fetch(API_CONFIG.ARTICLES)
         if (!response.ok) {
           throw new Error('Failed to fetch top news')
         }

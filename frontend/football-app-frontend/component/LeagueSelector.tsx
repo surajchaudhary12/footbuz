@@ -30,13 +30,14 @@ interface LeaguesResponse {
 
 export default function LeagueSelector() {
   const [leagues, setLeagues] = useState<League[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchLeagues = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/leagues') // Use absolute URL
+        const { API_CONFIG } = await import('@/utils/constants')
+        const response = await fetch(API_CONFIG.LEAGUES)
         if (!response.ok) {
           throw new Error('Failed to fetch leagues')
         }

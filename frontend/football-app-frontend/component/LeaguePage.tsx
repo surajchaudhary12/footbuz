@@ -26,7 +26,8 @@ export default function LeaguePage() {
   useEffect(() => {
     const fetchLeagueData = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/league/${leagueId}`);
+        const { API_CONFIG } = await import('@/utils/constants')
+        const response = await fetch(API_CONFIG.LEAGUE(leagueId as string));
         if (!response.ok) {
           throw new Error('Failed to fetch league data');
         }

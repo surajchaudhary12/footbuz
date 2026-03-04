@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import NewsModal from './NewsModal';
 import { NewsArticle, ModalArticle } from '@/types/types'; // Import centralized types
+import { API_CONFIG } from '@/utils/constants';
 
 export default function NewsArticles() {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -25,10 +26,10 @@ export default function NewsArticles() {
           transfersResponse,
           playerNewsResponse
         ] = await Promise.all([
-          fetch('http://localhost:5000/api/articles'),
-          fetch('http://localhost:5000/api/news/players/news'),
-          fetch('http://localhost:5000/api/news/players/transfers'),
-          fetch('http://localhost:5000/api/news/players')
+          fetch(`${API_CONFIG.ARTICLES}`),
+          fetch(`${API_CONFIG.NEWS}/players/news`),
+          fetch(`${API_CONFIG.NEWS}/players/transfers`),
+          fetch(`${API_CONFIG.PLAYERS}`)
         ]);
 
         if (
