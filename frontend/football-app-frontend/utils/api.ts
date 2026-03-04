@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Player, Match } from '../types';
 
 // Ensure to set NEXT_PUBLIC_API_BASE_URL in your .env.local
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
 /**
  * Search players by name.
@@ -13,7 +13,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5
  */
 export const searchPlayers = async (query: string): Promise<Player[]> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/players/searchPlayers`, {
+    const response = await axios.get(`${API_BASE_URL}/api/players/searchPlayers`, {
       params: { q: query },
     });
     return response.data.players;
@@ -30,7 +30,7 @@ export const searchPlayers = async (query: string): Promise<Player[]> => {
  */
 export const getPlayerDetails = async (playerId: string): Promise<Player> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/players/playerDetails/${playerId}`);
+    const response = await axios.get(`${API_BASE_URL}/api/players/playerDetails/${playerId}`);
     return response.data.response;
   } catch (error: any) {
     console.error('Get Player Details Error:', error);
@@ -46,7 +46,7 @@ export const getPlayerDetails = async (playerId: string): Promise<Player> => {
  */
 export const getPlayerMatches = async (playerId: string, limit: number = 5): Promise<Match[]> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/players/playerMatches/${playerId}`, {
+    const response = await axios.get(`${API_BASE_URL}/api/players/playerMatches/${playerId}`, {
       params: { limit },
     });
     return response.data.matches;
