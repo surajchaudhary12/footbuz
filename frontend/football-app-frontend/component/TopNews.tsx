@@ -10,6 +10,7 @@ import { AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import NewsModal from './NewsModal'
+import { ModalArticle } from '../types/types'
 import placeholderImage from '/public/placeholder.png' // Add a placeholder image in public folder
 
 interface Article {
@@ -27,7 +28,7 @@ export default function TopNews() {
   const [articles, setArticles] = useState<Article[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
+  const [selectedArticle, setSelectedArticle] = useState<ModalArticle | null>(null)
 
   useEffect(() => {
     const fetchTopNews = async () => {
@@ -79,7 +80,14 @@ export default function TopNews() {
                 whileHover={{ scale: 1.02 }}
                 onClick={() => {
                   const clubArticle = articles.find(a => a.headLine.toLowerCase().includes(club.toLowerCase()))
-                  if (clubArticle) setSelectedArticle(clubArticle)
+                  if (clubArticle) {
+                    setSelectedArticle({
+                      player: club,
+                      desc: clubArticle.headLine,
+                      content: clubArticle.source,
+                      website: clubArticle.url
+                    })
+                  }
                 }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

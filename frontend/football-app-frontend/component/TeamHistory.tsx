@@ -2,14 +2,24 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-export default function TeamHistory({ fetchData }) {
-  const [teams, setTeams] = useState([])
-  const [selectedTeam, setSelectedTeam] = useState(null)
+interface Team {
+  id: number;
+  name: string;
+  league?: string;
+  history?: string;
+}
+
+export default function TeamHistory({ fetchData }: { fetchData: (resource: string) => Promise<unknown> }) {
+  const [teams, setTeams] = useState<Team[]>([])
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
 
   useEffect(() => {
     const fetchTeams = async () => {
       const data = await fetchData('teams')
-      setTeams(data)
+      // Ensure data is an array before setting
+      if (Array.isArray(data)) {
+        setTeams(data as Team[])
+      }
     }
 
     fetchTeams()
@@ -21,7 +31,7 @@ export default function TeamHistory({ fetchData }) {
         <CardTitle>Team History</CardTitle>
       </CardHeader>
       <CardContent>
-        <Select onValueChange={(value) => setSelectedTeam(teams.find(team => team.id === parseInt(value)))}>
+        <Select onValueChange={(value) => setSelectedTeam(teams.find(team => team.id === parseInt(value)) || null)}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a team" />
           </SelectTrigger>

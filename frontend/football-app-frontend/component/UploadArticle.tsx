@@ -72,7 +72,7 @@ export default function UploadArticle() {
       </CardHeader>
       <CardContent>
         {status && (
-          <Alert variant={status.type === 'error' ? 'destructive' : 'success'}>
+          <Alert variant={status.type === 'error' ? 'destructive' : 'default'}>
             <AlertTitle>{status.type === 'error' ? 'Error' : 'Success'}</AlertTitle>
             <AlertDescription>{status.message}</AlertDescription>
           </Alert>

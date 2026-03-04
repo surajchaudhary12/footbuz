@@ -6,24 +6,28 @@ export interface BaseArticle {
   headingImage: string;
   content: string;
   author: string;
+  // Optional fields present on some article variants
+  player?: string;
+  desc?: string;
+  website?: string;
 }
 
 export interface UserArticle extends BaseArticle {
   type: 'userArticle';
-  player: string;
-  desc: string;
+  player?: string;
+  desc?: string;
 }
 
 export interface TransferArticle extends BaseArticle {
   type: 'transfer';
-  player: string;
-  desc: string;
+  player?: string;
+  desc?: string;
 }
 
 export interface PlayerArticle extends BaseArticle {
   type: 'player';
-  player: string;
-  desc: string;
+  player?: string;
+  desc?: string;
 }
 
 export interface GeneralArticle extends BaseArticle {
@@ -35,8 +39,8 @@ export interface GeneralArticle extends BaseArticle {
 export type NewsArticle = UserArticle | TransferArticle | PlayerArticle | GeneralArticle;
 
 export interface ModalArticle {
-  player: string;
-  desc: string;
-  content: string;
+  player?: string;
+  desc?: string;
+  content?: string;
   website?: string;
 }

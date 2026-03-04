@@ -1,6 +1,7 @@
 // app/league/page.tsx
 'use client';
 
+import { Suspense } from 'react';
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
@@ -108,14 +109,14 @@ interface TopScorer {
   penalties: number;
 }
 
-interface LeagueData {
+export interface LeagueData {
   league: League;
   teams: Team[];
   standings: Standing[];
   topScorers: TopScorer[];
 }
 
-export default function LeaguePage() {
+function LeaguePageContent() {
   const searchParams = useSearchParams();
   const code = searchParams.get('code')?.toUpperCase(); // Get 'code' from query parameters and ensure it's uppercase
   const [leagueData, setLeagueData] = useState<LeagueData | null>(null);
@@ -420,5 +421,13 @@ function LeagueSkeleton() {
         ))}
       </div>
     </div>
+  )
+}
+
+export default function LeaguePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LeaguePageContent />
+    </Suspense>
   )
 }

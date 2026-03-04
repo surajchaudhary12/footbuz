@@ -18,13 +18,13 @@ export default function NewsModal({ article, onClose }: NewsModalProps) {
     <Dialog open={!!article} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">{article.player}</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">{article.player || 'Article'}</DialogTitle>
           <DialogDescription>
-            Source: {article.content}
+            Source: {article.content || 'Unknown'}
           </DialogDescription>
         </DialogHeader>
         <div className="text-sm text-gray-700 whitespace-pre-wrap mt-4">
-          {article.desc}
+          {article.desc || 'No description available'}
         </div>
         {article.website && (
           <div className="mt-4">

@@ -30,7 +30,7 @@ interface LeaguesResponse {
 
 export default function LeagueSelector() {
   const [leagues, setLeagues] = useState<League[]>([])
-  const [isLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
