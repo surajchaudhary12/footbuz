@@ -1,6 +1,14 @@
 /** API configuration for Next.js frontend */
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+const normalizeBaseUrl = (url: string) =>
+  url
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/i, '');
+
+const BASE_URL = normalizeBaseUrl(
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000'
+);
 
 export const API_CONFIG = {
   BASE_URL,

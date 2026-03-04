@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
+import { API_CONFIG } from '@/utils/constants';
 
 // Interfaces
 
@@ -130,7 +131,7 @@ function LeaguePageContent() {
         if (!code) {
           throw new Error('No league code provided');
         }
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/league/${code}`); // Use environment variable
+        const response = await fetch(API_CONFIG.LEAGUE(code));
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('League not found');

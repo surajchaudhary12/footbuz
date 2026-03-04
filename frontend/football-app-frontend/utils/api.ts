@@ -2,9 +2,9 @@
 
 import axios from 'axios';
 import { Player, Match } from '../types';
+import { API_CONFIG } from './constants';
 
-// Ensure to set NEXT_PUBLIC_API_BASE_URL in your .env.local
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = API_CONFIG.BASE_URL;
 
 /**
  * Search players by name.
