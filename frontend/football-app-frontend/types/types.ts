@@ -28,7 +28,8 @@ export interface PlayerArticle extends BaseArticle {
 
 export interface GeneralArticle extends BaseArticle {
   type: 'general';
-  // No player or desc properties
+  player?: string; // Add this line! The '?' means it's optional.
+  desc?: string;
 }
 
 export type NewsArticle = UserArticle | TransferArticle | PlayerArticle | GeneralArticle;
